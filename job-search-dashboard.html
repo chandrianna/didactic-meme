@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Search Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inclusive+Sans&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #17171e;
+    --surface2: #1e1e28;
+    --border: #2a2a38;
+    --text: #e8e6f0;
+    --text-muted: #6b6880;
+    --accent: #7c6af5;
+    --accent-light: #1e1a40;
+    --green: #4ecb8d;
+    --green-light: #0f2a1e;
+    --yellow: #f5c642;
+    --yellow-light: #2a2010;
+    --red: #f56b6b;
+    --red-light: #2a1010;
+    --blue: #5ab4f5;
+    --blue-light: #0f1e2a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inclusive Sans', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 40px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .page-title span { color: var(--accent); }
+
+  .page-subtitle {
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 20px;
+  }
+
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tabs {
+    display: flex;
+    padding: 0 40px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .content { padding: 32px 40px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Job cards */
+  .job-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+
+  .job-card:hover { border-color: var(--accent); }
+
+  .job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .job-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; }
+  .job-company { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+  .job-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+  .badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge-accent { background: var(--accent-light); color: var(--accent); }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-yellow { background: var(--yellow-light); color: var(--yellow); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-gray { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .job-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+  .action-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover { background: var(--surface2); color: var(--text); }
+  .action-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .action-btn.primary:hover { opacity: 0.85; }
+  .action-btn.danger { color: var(--red); border-color: var(--red-light); }
+
+  /* Pipeline columns */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    overflow-x: auto;
+  }
+
+  .pipeline-col {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    min-height: 300px;
+  }
+
+  .pipeline-col-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pipeline-count {
+    background: var(--border);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .pipeline-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .pipeline-card:hover { border-color: var(--accent); }
+  .pipeline-card-title { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .pipeline-card-company { font-size: 11px; color: var(--text-muted); }
+
+  /* Checklist */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .check-item:last-child { border-bottom: none; }
+  .check-item.done { opacity: 0.45; }
+  .check-item.done .check-label { text-decoration: line-through; }
+
+  .check-box {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: all 0.15s;
+    background: var(--surface2);
+  }
+
+  .check-item.done .check-box { background: var(--green); border-color: var(--green); color: var(--bg); }
+
+  .check-label { flex: 1; line-height: 1.4; }
+  .check-tag { font-size: 10px; color: var(--text-muted); }
+
+  /* Text inputs */
+  .text-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .text-input:focus { border-color: var(--accent); }
+
+  .text-area {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  .text-area:focus { border-color: var(--accent); }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .form-row .text-input { flex: 1; }
+
+  .submit-btn {
+    padding: 8px 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .submit-btn:hover { opacity: 0.85; }
+
+  /* Weekly plan */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .day-card {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .day-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .day-task {
+    font-size: 11px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .day-task:last-child { border-bottom: none; }
+  .day-task.focus { color: var(--text); }
+
+  /* Cover letter template */
+  .template-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .template-block.editable {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .template-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .template-label.highlight { color: var(--accent); }
+
+  /* Progress */
+  .progress-bar { background: var(--surface2); border-radius: 4px; height: 5px; margin-top: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .pipeline { grid-template-columns: repeat(3, 220px); }
+    .week-grid { grid-template-columns: 1fr 1fr; }
+    .content { padding: 20px; }
+    .tabs { padding: 0 20px; overflow-x: auto; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 16px; padding: 24px 20px 16px; }
+    .stats-row { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">Job <span>Search</span></div>
+    <div class="page-subtitle">Data Analytics · Remote · Tracked & structured</div>
+  </div>
+  <div class="stats-row" id="stats-row">
+    <div class="stat-pill"><div class="stat-num" id="stat-saved">0</div><div class="stat-label">Saved</div></div>
+    <div class="stat-pill"><div class="stat-num" id="stat-applied">0</div><div class="stat-label">Applied</div></div>
+    <div class="stat-pill"><div class="stat-num" id="stat-interview">0</div><div class="stat-label">Interviews</div></div>
+    <div class="stat-pill"><div class="stat-num" id="stat-week">0</div><div class="stat-label">This week</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('tracker')">Job Tracker</div>
+  <div class="tab" onclick="switchTab('pipeline')">Pipeline</div>
+  <div class="tab" onclick="switchTab('weekly')">Weekly Plan</div>
+  <div class="tab" onclick="switchTab('tools')">Templates & Tools</div>
+</div>
+
+<div class="content">
+
+  <!-- JOB TRACKER -->
+  <div class="panel active" id="panel-tracker">
+    <div class="grid-2">
+      <div class="card" style="grid-column: span 2;">
+        <div class="card-title">➕ Add a Job</div>
+        <div class="form-row">
+          <input class="text-input" id="j-title" placeholder="Job title" />
+          <input class="text-input" id="j-company" placeholder="Company" />
+          <input class="text-input" id="j-url" placeholder="Job posting URL" />
+        </div>
+        <div class="form-row">
+          <select class="text-input" id="j-status">
+            <option value="saved">Saved</option>
+            <option value="tailoring">Tailoring Resume</option>
+            <option value="applied">Applied</option>
+            <option value="interview">Interview</option>
+            <option value="offer">Offer</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <input class="text-input" id="j-deadline" type="date" />
+          <input class="text-input" id="j-notes" placeholder="Notes (domain, salary range, etc.)" />
+          <button class="submit-btn" onclick="addJob()">Save Job</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div class="section-label">All Jobs</div>
+      <div id="job-list"></div>
+      <div id="no-jobs" style="color: var(--text-muted); font-size: 12px; padding: 20px 0; display: none;">No jobs saved yet. Add one above to get started.</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="panel" id="panel-pipeline">
+    <div class="pipeline" id="pipeline-board"></div>
+  </div>
+
+  <!-- WEEKLY PLAN -->
+  <div class="panel" id="panel-weekly">
+    <div class="grid-2" style="margin-bottom: 20px;">
+      <div class="card">
+        <div class="card-title">📋 This Week's Focus</div>
+        <div class="section-label">One task per day — no overwhelm</div>
+        <div class="week-grid">
+          <div class="day-card">
+            <div class="day-name">Monday</div>
+            <div class="day-task focus">Find & save 3–5 job postings only</div>
+            <div class="day-task">No applying. Just collecting.</div>
+          </div>
+          <div class="day-card">
+            <div class="day-name">Tuesday</div>
+            <div class="day-task focus">Pick 1 job. Tailor resume only.</div>
+            <div class="day-task">Use Jobscan to check keywords.</div>
+          </div>
+          <div class="day-card">
+            <div class="day-name">Wednesday</div>
+            <div class="day-task focus">Write cover letter for that 1 job</div>
+            <div class="day-task">Use template — only change middle paragraph.</div>
+          </div>
+          <div class="day-card">
+            <div class="day-name">Thursday</div>
+            <div class="day-task focus">Submit application</div>
+            <div class="day-task">Log it here. Done for the day.</div>
+          </div>
+          <div class="day-card">
+            <div class="day-name">Friday</div>
+            <div class="day-task focus">Find & save next batch</div>
+            <div class="day-task">Or rest. 1 application/week is real progress.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✅ Weekly Checklist</div>
+        <div id="weekly-checks"></div>
+        <div class="progress-bar" style="margin-top: 12px;"><div class="progress-fill" id="weekly-prog" style="width:0%"></div></div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: right;" id="weekly-prog-label">0 / 0 done</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Weekly Progress Note</div>
+      <textarea class="text-area" id="weekly-note" placeholder="What did I do this week? What was hard? What's the plan for next week?" style="min-height: 120px;"></textarea>
+    </div>
+  </div>
+
+  <!-- TEMPLATES -->
+  <div class="panel" id="panel-tools">
+    <div class="grid-2">
+      <div class="card" style="grid-column: span 2;">
+        <div class="card-title">📄 Cover Letter Template</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">Fixed parts stay the same every time. Only the two ⭐ swap blocks change. Copy the final letter with the button below.</div>
+
+        <div class="template-block">
+          <div class="template-label">Opening — Fixed</div>
+          I'm applying for the <strong>[Job Title]</strong> role at <strong>[Company Name]</strong>. I'm a data analyst with a B.S. in Data Analytics and a background in healthcare and pharmacy operations — and I think that combination is a pretty good fit for what you're looking for.
+        </div>
+
+        <div class="template-block editable">
+          <div class="template-label highlight">⭐ SWAP BLOCK A — Why this company / role (write fresh each time)</div>
+          <div style="font-size: 10px; color: #b8960a; margin-bottom: 6px;">Options: "When I read your posting, [X] stood out..." · "I've been targeting [industry] because..." · "The [data quality / remote] focus here is a strong match for how I work..."</div>
+          <textarea class="text-area" id="cover-block-a" placeholder="Write 2–3 sentences specific to this company. Find one thing in their posting — their product, a phrase they used, their mission — and reference it." style="min-height: 70px; background: transparent; border: none; padding: 0;"></textarea>
+        </div>
+
+        <div class="template-block editable">
+          <div class="template-label highlight">⭐ SWAP BLOCK B — Your most relevant experience (pick from bank below)</div>
+          <div style="font-size: 10px; color: #b8960a; margin-bottom: 6px;">Healthcare roles → pharmacy bullet · Data quality roles → TELUS bullet · Problem-solving roles → Walgreens story · Remote emphasis → remote bullet · Technical roles → tools bullet</div>
+          <textarea class="text-area" id="cover-block-b" placeholder="Paste whichever Block B option from the bank below best matches this job posting's language." style="min-height: 70px; background: transparent; border: none; padding: 0;"></textarea>
+        </div>
+
+        <div class="template-block">
+          <div class="template-label">Middle — Fixed</div>
+          I work in Python, R, SQL, and Power BI, and I'm experienced in fully remote, asynchronous environments — I've been working remotely for 4+ years and don't need oversight to stay productive or consistent. I'm methodical, I document my work clearly, and I'm genuinely good at finding the thing that doesn't add up and figuring out why.
+        </div>
+
+        <div class="template-block">
+          <div class="template-label">Closing — Fixed</div>
+          I'd love the chance to talk about how my background could be useful to your team. Thank you for your time and consideration.<br><br>
+          Sincerely,<br>Kaitlin Moore<br>kaitmoore561@gmail.com · 573-429-9547
+        </div>
+
+        <button class="submit-btn" style="margin-top: 12px; width: 100%;" onclick="copyCoverLetter()">📋 Copy Full Letter to Clipboard</button>
+      </div>
+
+      <div class="card" style="grid-column: span 2;">
+        <div class="card-title">📋 Cover Letter Block B — Swap Bank</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Click any option to copy it, then paste into Block B above.</div>
+        <div id="cover-bank"></div>
+      </div>
+
+      <div class="card" style="grid-column: span 2;">
+        <div class="card-title">🔍 Resume Bullet Bank</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Click any bullet to copy it. Mix and match to match the job posting's keywords. Keep 3–4 bullets per job.</div>
+
+        <div class="section-label">TELUS Digital — Data Quality / Analytics / Remote roles</div>
+        <div id="bullet-analytics"></div>
+
+        <div class="section-label" style="margin-top: 14px;">Pharmacy & iScribeHealth — Healthcare / Health-Tech / PBM roles</div>
+        <div id="bullet-healthcare"></div>
+
+        <div class="section-label" style="margin-top: 14px;">Pharmacy & Three Rivers — Data Quality / Operations / BA roles</div>
+        <div id="bullet-problem"></div>
+
+        <div class="add-row" style="margin-top: 14px; display: flex; gap: 8px;">
+          <input class="text-input" id="bullet-input" placeholder="Add your own bullet point..." />
+          <button class="submit-btn" onclick="addBullet()">Add</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🌐 Job Boards to Check</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Stick to these — less noise, more remote.</div>
+        <div id="boards-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🗂️ ATS Checklist</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Run through this before every application.</div>
+        <div id="ats-checks"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let state = JSON.parse(localStorage.getItem('jobsearch') || 'null') || {
+  jobs: [],
+  weeklyChecks: {},
+  weeklyNote: '',
+  coverMiddle: '',
+  customBullets: [],
+  weeklyNote: ''
+};
+
+function save() { localStorage.setItem('jobsearch', JSON.stringify(state)); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  renderAll();
+}
+
+// Jobs
+function addJob() {
+  const title = document.getElementById('j-title').value.trim();
+  const company = document.getElementById('j-company').value.trim();
+  if (!title || !company) { alert('Please enter at least a job title and company.'); return; }
+
+  state.jobs.unshift({
+    id: Date.now(),
+    title,
+    company,
+    url: document.getElementById('j-url').value.trim(),
+    status: document.getElementById('j-status').value,
+    deadline: document.getElementById('j-deadline').value,
+    notes: document.getElementById('j-notes').value.trim(),
+    added: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})
+  });
+
+  ['j-title','j-company','j-url','j-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('j-status').value = 'saved';
+  document.getElementById('j-deadline').value = '';
+  save(); renderAll();
+}
+
+function deleteJob(id) {
+  state.jobs = state.jobs.filter(j => j.id !== id);
+  save(); renderAll();
+}
+
+function cycleStatus(id) {
+  const statuses = ['saved','tailoring','applied','interview','offer','rejected'];
+  const job = state.jobs.find(j => j.id === id);
+  const next = statuses[(statuses.indexOf(job.status)+1) % statuses.length];
+  job.status = next;
+  save(); renderAll();
+}
+
+const statusColors = {
+  saved: 'badge-gray',
+  tailoring: 'badge-blue',
+  applied: 'badge-accent',
+  interview: 'badge-yellow',
+  offer: 'badge-green',
+  rejected: 'badge-red'
+};
+
+const statusLabels = {
+  saved: 'Saved',
+  tailoring: 'Tailoring',
+  applied: 'Applied',
+  interview: 'Interview',
+  offer: 'Offer 🎉',
+  rejected: 'Rejected'
+};
+
+function renderJobs() {
+  const el = document.getElementById('job-list');
+  const none = document.getElementById('no-jobs');
+  el.innerHTML = '';
+
+  if (state.jobs.length === 0) { none.style.display = 'block'; return; }
+  none.style.display = 'none';
+
+  state.jobs.forEach(j => {
+    const div = document.createElement('div');
+    div.className = 'job-card';
+    const deadline = j.deadline ? `<span class="badge badge-yellow">Due ${new Date(j.deadline+'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'})}</span>` : '';
+    const url = j.url ? `<a href="${j.url}" target="_blank" style="color: var(--accent); font-size: 11px; text-decoration: none;">View posting →</a>` : '';
+    div.innerHTML = `
+      <div class="job-header">
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-company">${j.company}</div>
+        </div>
+        <span class="badge ${statusColors[j.status]}">${statusLabels[j.status]}</span>
+      </div>
+      <div class="job-meta">
+        <span class="badge badge-gray">Added ${j.added}</span>
+        ${deadline}
+        ${j.notes ? `<span class="badge badge-gray">${j.notes}</span>` : ''}
+      </div>
+      <div class="job-actions">
+        <button class="action-btn primary" onclick="cycleStatus(${j.id})">Move → ${statusLabels[Object.keys(statusLabels)[(Object.keys(statusLabels).indexOf(j.status)+1)%Object.keys(statusLabels).length]]}</button>
+        ${url}
+        <button class="action-btn danger" onclick="deleteJob(${j.id})">Remove</button>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+
+  // Stats
+  document.getElementById('stat-saved').textContent = state.jobs.length;
+  document.getElementById('stat-applied').textContent = state.jobs.filter(j => ['applied','interview','offer'].includes(j.status)).length;
+  document.getElementById('stat-interview').textContent = state.jobs.filter(j => j.status === 'interview').length;
+  const oneWeekAgo = Date.now() - 7*24*60*60*1000;
+  document.getElementById('stat-week').textContent = state.jobs.filter(j => j.id > oneWeekAgo && j.status !== 'saved').length;
+}
+
+function renderPipeline() {
+  const cols = ['saved','tailoring','applied','interview','offer'];
+  const el = document.getElementById('pipeline-board');
+  el.innerHTML = '';
+  cols.forEach(status => {
+    const jobs = state.jobs.filter(j => j.status === status);
+    const col = document.createElement('div');
+    col.className = 'pipeline-col';
+    col.innerHTML = `<div class="pipeline-col-title">${statusLabels[status]} <span class="pipeline-count">${jobs.length}</span></div>`;
+    jobs.forEach(j => {
+      const card = document.createElement('div');
+      card.className = 'pipeline-card';
+      card.innerHTML = `<div class="pipeline-card-title">${j.title}</div><div class="pipeline-card-company">${j.company}</div>`;
+      col.appendChild(card);
+    });
+    el.appendChild(col);
+  });
+}
+
+// Weekly checks
+const weeklyCheckItems = [
+  {id:'wc1', label:'Found and saved at least 3 job postings'},
+  {id:'wc2', label:'Tailored resume for at least 1 job'},
+  {id:'wc3', label:'Submitted at least 1 application'},
+  {id:'wc4', label:'Ran resume through Jobscan'},
+  {id:'wc5', label:'Updated job tracker with current statuses'},
+];
+
+function renderWeeklyChecks() {
+  const el = document.getElementById('weekly-checks');
+  el.innerHTML = '';
+  weeklyCheckItems.forEach(item => {
+    const div = document.createElement('div');
+    const done = state.weeklyChecks[item.id];
+    div.className = 'check-item' + (done ? ' done' : '');
+    div.onclick = () => { state.weeklyChecks[item.id] = !state.weeklyChecks[item.id]; save(); renderWeeklyChecks(); };
+    div.innerHTML = `<div class="check-box">${done ? '✓' : ''}</div><span class="check-label">${item.label}</span>`;
+    el.appendChild(div);
+  });
+  const done = weeklyCheckItems.filter(i => state.weeklyChecks[i.id]).length;
+  const pct = Math.round(done/weeklyCheckItems.length*100);
+  document.getElementById('weekly-prog').style.width = pct + '%';
+  document.getElementById('weekly-prog-label').textContent = `${done} / ${weeklyCheckItems.length} done`;
+}
+
+// Bullets
+const defaultBullets = {
+  analytics: [
+    // TELUS — Data Quality / Analytics
+    'Evaluated AI-generated content against structured quality rubrics, identifying patterns in accuracy failures, hallucinations, and safety risks',
+    'Performed systematic comparative analysis across multiple model outputs to determine optimal responses and surface edge case behaviors',
+    'Maintained consistent, well-documented quality assessments in a fully remote, asynchronous environment with no direct supervision',
+    'Contributed structured feedback that directly informed data quality improvements and model refinement pipelines',
+    'Operated independently across all tasks in a distributed, asynchronous team — self-managing workload, deadlines, and quality benchmarks without in-person oversight',
+  ],
+  healthcare: [
+    // Pharmacy — Healthcare / Health-Tech / PBM
+    'Managed high-volume prescription data workflows including insurance adjudication, prior authorizations, and formulary verification across multiple payer systems',
+    'Applied discount and copay assistance programs (GoodRx, manufacturer coupons) to resolve pricing discrepancies, directly reducing patient cost burden',
+    'Identified a real-time pricing solution in a high-pressure scenario that reduced a patient\'s combined medication cost below the price of the controlled substance alone — a resolution the supervising pharmacist had not identified',
+    'Maintained strict compliance with controlled substance regulations (DEA schedules, documentation standards) and HIPAA requirements',
+    'Resolved insurance rejections and claim errors by identifying root causes in adjudication data and coordinating corrections with payers',
+    // iScribeHealth
+    'Converted unstructured audio from patient encounters into structured, HIPAA-compliant clinical records used directly in care decisions',
+    'Developed deep familiarity with clinical workflows, ICD coding conventions, and medical terminology across multiple specialties',
+    'Transformed raw, unstructured data into standardized formats — improving accessibility and usability of health records',
+  ],
+  problem: [
+    // Pharmacy — Data Quality / Operations / BA
+    'Processed and verified prescription records with high accuracy under strict regulatory constraints, developing pattern recognition for data errors and anomalies',
+    'Identified discrepancies between system records and real-world pricing, independently researching solutions within policy constraints',
+    'Trained new staff on documentation workflows and data entry standards, ensuring consistency and compliance across the team',
+    // Three Rivers
+    'Maintained and analyzed procurement and inventory databases in Excel and Access, ensuring data accuracy across administrative records',
+    'Conducted regular audits to identify and reconcile data discrepancies, producing structured reports for administrative stakeholders',
+    'Supported data-driven decision-making by ensuring records were clean, current, and consistently formatted',
+  ]
+};
+
+function renderBullets() {
+  ['analytics','healthcare','problem'].forEach(cat => {
+    const el = document.getElementById('bullet-'+cat);
+    el.innerHTML = '';
+    const bullets = [...(defaultBullets[cat] || []), ...(state.customBullets || []).filter(b => b.cat === cat).map(b => b.text)];
+    bullets.forEach(b => {
+      const div = document.createElement('div');
+      div.style.cssText = 'padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; line-height: 1.5; color: var(--text-muted); cursor: pointer; display: flex; gap: 8px; align-items: flex-start;';
+      div.title = 'Click to copy';
+      div.onclick = () => { navigator.clipboard.writeText(b); div.style.color = 'var(--green)'; setTimeout(() => div.style.color = 'var(--text-muted)', 1000); };
+      div.innerHTML = `<span style="color: var(--accent); flex-shrink:0;">▸</span><span>${b}</span>`;
+      el.appendChild(div);
+    });
+  });
+}
+
+function addBullet() {
+  const val = document.getElementById('bullet-input').value.trim();
+  if (!val) return;
+  if (!state.customBullets) state.customBullets = [];
+  state.customBullets.push({text: val, cat: 'analytics'});
+  document.getElementById('bullet-input').value = '';
+  save(); renderBullets();
+}
+
+// Boards
+const boards = [
+  {name: 'We Work Remotely', url: 'https://weworkremotely.com', note: 'Remote-only, less noise'},
+  {name: 'Remote.co', url: 'https://remote.co', note: 'Curated remote roles'},
+  {name: 'Jobscan', url: 'https://jobscan.co', note: 'ATS keyword checker'},
+  {name: 'LinkedIn (filtered remote)', url: 'https://linkedin.com/jobs', note: 'Filter: Remote · Data Analyst'},
+  {name: 'Health:Further Job Board', url: 'https://jobs.healthfurther.com', note: 'Healthcare + data roles'},
+  {name: 'USAJobs', url: 'https://usajobs.gov', note: 'Federal/remote data analyst openings'},
+];
+
+function renderBoards() {
+  const el = document.getElementById('boards-list');
+  el.innerHTML = '';
+  boards.forEach(b => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;';
+    div.innerHTML = `<a href="${b.url}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 12px; flex:1;">${b.name} →</a><span style="font-size: 10px; color: var(--text-muted);">${b.note}</span>`;
+    el.appendChild(div);
+  });
+}
+
+const atsItems = [
+  'Saved resume as .docx or plain PDF (no tables or columns)',
+  'Job title in resume matches posting exactly',
+  'Keywords from posting appear in resume (use Jobscan)',
+  'No graphics, headers/footers, or text boxes',
+  'Contact info is plain text at the top',
+  'Each bullet starts with a strong action verb',
+  'Tailored summary/objective matches the role',
+];
+
+function renderATS() {
+  const el = document.getElementById('ats-checks');
+  el.innerHTML = '';
+  atsItems.forEach(item => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 11px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;';
+    div.innerHTML = `<span style="color: var(--accent); flex-shrink:0;">□</span><span>${item}</span>`;
+    el.appendChild(div);
+  });
+}
+
+const coverBankOptions = [
+  {
+    label: 'For healthcare / health-tech roles',
+    text: 'Before completing my degree I spent four years as a pharmacy technician, which means I understand healthcare data at ground level — insurance adjudication, prescription workflows, pricing discrepancies, compliance requirements. I\'ve seen firsthand where the data breaks down and what it costs when it does.'
+  },
+  {
+    label: 'For data quality / operations roles',
+    text: 'Most recently I\'ve been working as an AI data quality evaluator, assessing outputs against structured rubrics and documenting findings consistently in a fully remote environment. It\'s detail-oriented, pattern-recognition work — which is where I tend to do my best thinking.'
+  },
+  {
+    label: 'For general analytics / problem-solving emphasis',
+    text: 'One thing I\'d highlight: I tend to find solutions other people haven\'t tried yet. In a previous role, I identified a pricing workaround under time pressure that reduced a patient\'s combined medication cost below what either medication cost alone — something the supervising pharmacist hadn\'t found. That instinct for reframing problems is something I bring to data work too.'
+  },
+  {
+    label: 'For roles emphasizing remote / independent work',
+    text: 'I\'ve been fully remote for four years across roles in AI data quality evaluation, clinical documentation, and healthcare operations. I\'m comfortable managing my own workload without oversight, and my work is consistently well-documented and reproducible.'
+  },
+  {
+    label: 'For roles with a strong technical / tools emphasis',
+    text: 'My analytics degree focused heavily on Python and R for data analysis and visualization, with additional coursework in SQL and Power BI. I\'m comfortable working independently with messy, real-world datasets — not just clean classroom examples.'
+  }
+];
+
+function renderCoverBank() {
+  const el = document.getElementById('cover-bank');
+  if (!el) return;
+  el.innerHTML = '';
+  coverBankOptions.forEach(opt => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding: 12px; margin-bottom: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: border-color 0.15s;';
+    div.onmouseover = () => div.style.borderColor = 'var(--accent)';
+    div.onmouseout = () => div.style.borderColor = 'var(--border)';
+    div.innerHTML = `<div style="font-size: 10px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">▶ ${opt.label} — click to copy & paste into Block B</div><div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">${opt.text}</div>`;
+    div.onclick = () => {
+      navigator.clipboard.writeText(opt.text);
+      const ba = document.getElementById('cover-block-b');
+      if (ba) ba.value = opt.text;
+      div.style.borderColor = 'var(--green)';
+      setTimeout(() => div.style.borderColor = 'var(--border)', 1500);
+    };
+    el.appendChild(div);
+  });
+}
+
+function copyCoverLetter() {
+  const blockA = document.getElementById('cover-block-a')?.value.trim() || '[SWAP BLOCK A — Why this company / role]';
+  const blockB = document.getElementById('cover-block-b')?.value.trim() || '[SWAP BLOCK B — Your most relevant experience]';
+  const letter = `Dear [Hiring Manager's Name / Hiring Team],\n\nI'm applying for the [Job Title] role at [Company Name]. I'm a data analyst with a B.S. in Data Analytics and a background in healthcare and pharmacy operations — and I think that combination is a pretty good fit for what you're looking for.\n\n${blockA}\n\n${blockB}\n\nI work in Python, R, SQL, and Power BI, and I'm experienced in fully remote, asynchronous environments — I've been working remotely for 4+ years and don't need oversight to stay productive or consistent. I'm methodical, I document my work clearly, and I'm genuinely good at finding the thing that doesn't add up and figuring out why.\n\nI'd love the chance to talk about how my background could be useful to your team. Thank you for your time and consideration.\n\nSincerely,\nKaitlin Moore\nkaitmoore561@gmail.com · 573-429-9547`;
+  navigator.clipboard.writeText(letter);
+  alert('Cover letter copied to clipboard!');
+}
+
+function renderAll() {
+  renderJobs();
+  renderPipeline();
+  renderWeeklyChecks();
+  renderBullets();
+  renderBoards();
+  renderATS();
+  renderCoverBank();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
+
+  const wn = document.getElementById('weekly-note');
+  wn.value = state.weeklyNote || '';
+  wn.oninput = () => { state.weeklyNote = wn.value; save(); };
+
+  const ca = document.getElementById('cover-block-a');
+  if (ca) { ca.value = state.coverBlockA || ''; ca.oninput = () => { state.coverBlockA = ca.value; save(); }; }
+
+  const cb = document.getElementById('cover-block-b');
+  if (cb) { cb.value = state.coverBlockB || ''; cb.oninput = () => { state.coverBlockB = cb.value; save(); }; }
+
+  document.getElementById('j-title').addEventListener('keydown', e => { if(e.key === 'Enter') addJob(); });
+  document.getElementById('bullet-input').addEventListener('keydown', e => { if(e.key === 'Enter') addBullet(); });
+});
+</script>
+</body>
+</html>
