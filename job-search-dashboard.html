@@ -854,7 +854,7 @@ function renderBoards() {
   boards.forEach(b => {
     const div = document.createElement('div');
     div.style.cssText = 'padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;';
-    div.innerHTML = `<a href="${b.url}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 12px; flex:1;">${b.name} →</a><span style="font-size: 10px; color: var(--text-muted);">${b.note}</span>`;
+    div.innerHTML = `<a href="${b.url}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 12px; flex:1;">${b.name} →</a>${b.note ? `<span style="font-size: 10px; color: var(--text-muted);">${b.note}</span>` : ''}`;
     el.appendChild(div);
   });
 }
